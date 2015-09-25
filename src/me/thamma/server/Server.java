@@ -1,74 +1,99 @@
 package me.thamma.server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-class Server {
+public class Server {
 	private int port;
 	private List<User> users;
 	private ServerSocket server;
+	private Scanner sc;
+	private boolean waitingForUsers;
 
-	public Server(int port) throws IOException {
+	/**
+	 * Server constructor to be launched by a terminal
+	 * 
+	 * @param port
+	 *            The port to host the Server on
+	 * @param size
+	 *            The maximum amount of users to connect
+	 * @throws IOException
+	 */
+	public Server(int port, int size) throws IOException {
 		this.port = port;
-		int size = 2;
-		server = new ServerSocket(this.port);
-		users = new ArrayList<User>();
-		registerUsers(2);
+		this.server = new ServerSocket(this.port);
+		this.users = new ArrayList<User>();
+		this.waitingForUsers = true;
+		registerUsers(size);
 
+		handleClientInputs((input, user) -> {
+			System.out.println(user.getId() + ": " + input);
+		});
+		handleLocalInput((input) -> {
+			System.out.println("> " + input);
+		});
+	}
+
+	/**
+	 * Starts a thread which fetches the clients' input (in order)
+	 * 
+	 * @param inputHandler
+	 *            The InputHandler interface to handle the String input
+	 */
+	private void handleClientInputs(RemoteInputHandler inputHandler) {
 		Thread mainLoop = new Thread(() -> {
-			loop: while (true) {
-				for (User u : users) {
+			while (true) {
+				for (User user : users) {
 					try {
-						if (u.getInputStream().available() != 0) {
-							String msg = u.getInputStream().readUTF();
-							System.out.println(u.getId() + ": " + msg);
-							if (msg.equalsIgnoreCase("kill")) {
-								for (User tokill : users) {
-									tokill.alert("DIE!");
-									tokill.getOutputStream().writeUTF("You should die now");
-									// tokill.kill();
-								}
-								break loop;
+						if (user.hasInput()) {
+							String msg = user.getInputStream().readUTF();
+							System.out.println(user.getId() + ": " + msg);
+							if (!msg.equalsIgnoreCase("")) {
+								inputHandler.handle(msg, user);
 							}
 						}
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
+						System.out.println("Could not handle RemoteInput");
 						e.printStackTrace();
 					}
 				}
 			}
 		});
 		mainLoop.start();
-		Scanner sc = new Scanner(System.in);
+	}
+
+	/**
+	 * Starts a thread which fetches the local input
+	 * 
+	 * @param inputHandler
+	 *            The InputHandler interface to handle the String input
+	 */
+	private void handleLocalInput(InputHandler inputHandler) {
 		Thread localInput = new Thread(() -> {
 			while (true) {
 				if (sc.hasNextLine()) {
-					String msg = sc.nextLine();
-					for (User u : users) {
-						try {
-							u.alert(msg);
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
+					String line = sc.nextLine();
+					if (!line.equals(""))
+						inputHandler.handle(line);
 				}
 			}
 		});
 		localInput.start();
-		// server.close();
 	}
 
+	/**
+	 * Creates a thread that lets the main thread sleep until users.size()
+	 * matches maxCount
+	 * 
+	 * @param maxCount
+	 */
 	public void registerUsers(int maxCount) {
 		Thread pollingNewPlayers = new Thread(() -> {
 			System.out.println("Waiting for " + maxCount + " users to connect...");
-			while (users.size() != maxCount) {
+			while (users.size() != maxCount && waitingForUsers) {
 				System.out.println("Waiting for users! " + users.size() + "/" + maxCount);
 				try {
 					registerUser();
@@ -88,44 +113,4 @@ class Server {
 	private void registerUser() throws IOException {
 		users.add(new User(users.size(), server.accept()));
 	}
-}
-
-class User {
-	private Socket socket;
-	private DataInputStream input;
-	private DataOutputStream output;
-	private int id;
-
-	public User(int id, Socket socket) throws IOException {
-		this.socket = socket;
-		this.id = id;
-		this.input = new DataInputStream(socket.getInputStream());
-		this.output = new DataOutputStream(socket.getOutputStream());
-	}
-
-	public int getId() {
-		return this.id;
-	}
-
-	public void kill() throws IOException {
-		this.socket.close();
-		alert("Warning: connection lost!");
-	}
-
-	public DataOutputStream getOutputStream() {
-		return this.output;
-	}
-
-	public DataInputStream getInputStream() {
-		return this.input;
-	}
-
-	public void sendEvent() {
-
-	}
-
-	public void alert(String message) throws IOException {
-		this.getOutputStream().writeUTF(message);
-	}
-
 }
