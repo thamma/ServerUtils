@@ -7,6 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 class Server {
 	private int port;
@@ -18,37 +19,74 @@ class Server {
 		int size = 2;
 		server = new ServerSocket(this.port);
 		users = new ArrayList<User>();
+		registerUsers(2);
 
-		while (users.size() != size) {
-			System.out.println("Waiting for users! " + users.size() + "/" + size);
-			int id = users.size();
-			registerUser();
-		}
-		System.out.println("User limit exceeded");
-		loop: while (true) {
-			for (User u : users) {
-				if (u.getInputStream().available() != 0) {
-					String msg = u.getInputStream().readUTF();
-					System.out.println(u.getId() + ": " + msg);
-					if (msg.equalsIgnoreCase("kill")) {
-						for (User tokill : users) {
-							tokill.getOutputStream().writeUTF("You should die now");
-//							tokill.kill();
+		Thread mainLoop = new Thread(() -> {
+			loop: while (true) {
+				for (User u : users) {
+					try {
+						if (u.getInputStream().available() != 0) {
+							String msg = u.getInputStream().readUTF();
+							System.out.println(u.getId() + ": " + msg);
+							if (msg.equalsIgnoreCase("kill")) {
+								for (User tokill : users) {
+									tokill.alert("DIE!");
+									tokill.getOutputStream().writeUTF("You should die now");
+									// tokill.kill();
+								}
+								break loop;
+							}
 						}
-						break loop;
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 			}
-		}
-		server.close();
+		});
+		mainLoop.start();
+		Scanner sc = new Scanner(System.in);
+		Thread localInput = new Thread(() -> {
+			while (true) {
+				if (sc.hasNextLine()) {
+					String msg = sc.nextLine();
+					for (User u : users) {
+						try {
+							u.alert(msg);
+						} catch (Exception e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		});
+		localInput.start();
+		// server.close();
 	}
 
-	static int count = 0;
+	public void registerUsers(int maxCount) {
+		Thread pollingNewPlayers = new Thread(() -> {
+			System.out.println("Waiting for " + maxCount + " users to connect...");
+			while (users.size() != maxCount) {
+				System.out.println("Waiting for users! " + users.size() + "/" + maxCount);
+				try {
+					registerUser();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			System.out.println("hit user limit");
+		});
+		pollingNewPlayers.start();
+		while (users.size() != maxCount) {
+
+		}
+	}
 
 	private void registerUser() throws IOException {
-		users.add(new User(count, server.accept()));
-		count++;
-
+		users.add(new User(users.size(), server.accept()));
 	}
 }
 
@@ -71,6 +109,7 @@ class User {
 
 	public void kill() throws IOException {
 		this.socket.close();
+		alert("Warning: connection lost!");
 	}
 
 	public DataOutputStream getOutputStream() {
@@ -79,6 +118,14 @@ class User {
 
 	public DataInputStream getInputStream() {
 		return this.input;
+	}
+
+	public void sendEvent() {
+
+	}
+
+	public void alert(String message) throws IOException {
+		this.getOutputStream().writeUTF(message);
 	}
 
 }

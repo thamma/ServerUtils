@@ -9,23 +9,60 @@ import java.util.Scanner;
 
 class Client {
 	private Socket socket;
+	private DataOutputStream dOut;
+	private DataInputStream dIn;
+	private Scanner sc;
 
 	public Client(String ip, int port) throws UnknownHostException, IOException {
 		this.socket = new Socket(ip, port);
+		dOut = new DataOutputStream(socket.getOutputStream());
+		dIn = new DataInputStream(socket.getInputStream());
+		sc = new Scanner(System.in);
+		startLocalInput();
+		startRemoteInput((input) -> {
+			System.out.println(input);
+		});
 
-		DataOutputStream dOut = new DataOutputStream(socket.getOutputStream());
-		DataInputStream dIn = new DataInputStream(socket.getInputStream());
-		Scanner sc = new Scanner(System.in);
-		while (true) {
-			if (sc.hasNextLine()) {
-				dOut.writeUTF(sc.nextLine());
-				dOut.flush();
-			}
-			if (dIn.available() != 0) {
-				String msg = dIn.readUTF();
-				System.out.println("Server responded: " + msg);
-			}
-		}
 	}
 
+	private void startRemoteInput(InputHandler inputHandler) {
+		Thread remoteInput = new Thread(() -> {
+			while (true) {
+				try {
+					if (dIn.available() != 0) {
+						String message = dIn.readUTF();
+						if (message.equals(""))
+							inputHandler.handle(message);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					System.out.println("Could not recieve message from remote");
+				}
+			}
+		});
+		remoteInput.start();
+	}
+
+	private void startLocalInput() {
+		Thread localInput = new Thread(() -> {
+			while (true) {
+				if (sc.hasNextLine()) {
+					String line = sc.nextLine();
+					if (!line.equals(""))
+						pushMessage(line);
+				}
+			}
+		});
+		localInput.start();
+	}
+
+	public void pushMessage(String message) {
+		try {
+			dOut.writeUTF(message);
+			dOut.flush();
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.out.println("Could not send message to remote");
+		}
+	}
 }
