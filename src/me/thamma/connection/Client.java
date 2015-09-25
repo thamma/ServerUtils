@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 import me.thamma.commands.CommandFactory;
 
-public class Client {
+public class Client extends User {
 	private Socket socket;
 	private DataOutputStream dataOut;
 	private DataInputStream dataIn;
@@ -29,8 +29,9 @@ public class Client {
 	 *             IOException If Socket connection cannot be established
 	 */
 	public Client(String ip, int port) throws UnknownHostException, IOException {
+		super(-1);
 		this.socket = new Socket(ip, port);
-		commandFactory = CommandFactory.init(DingCommand.class);
+		commandFactory = CommandFactory.init();
 		dataOut = new DataOutputStream(socket.getOutputStream());
 		dataIn = new DataInputStream(socket.getInputStream());
 		sc = new Scanner(System.in);
@@ -38,7 +39,7 @@ public class Client {
 			if (input.matches("[{](.*)[}]")) {
 				System.out.println("Cmd detected");
 				command(input);
-			} else if (input.startsWith("msg ")) {
+			} else if (input.startsWith("msg ")) { 
 				pushMessage(input.replaceFirst("msg ", ""));
 			} else
 				System.out.println("> " + input);
@@ -81,7 +82,7 @@ public class Client {
 				try {
 					if (dataIn.available() != 0) {
 						String message = dataIn.readUTF();
-						if (message.equals(""))
+						if (!message.equals(""))
 							inputHandler.handle(message);
 					}
 				} catch (Exception e) {

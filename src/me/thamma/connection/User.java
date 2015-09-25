@@ -1,46 +1,45 @@
 package me.thamma.connection;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.Socket;
-
 public class User {
-	private Socket socket;
-	private DataInputStream input;
-	private DataOutputStream output;
-	private int id;
 
-	public User(int id, Socket socket) throws IOException {
-		this.socket = socket;
+	static final char split = ';';
+	private int id;
+	private String nick;
+
+	public User(int id) {
+		setId(id);
+		setName("Player(" + id + ")");
+	}
+
+	public User(int id, String nick) {
+		this(id);
+		this.nick = nick;
+	}
+
+	public static User fromResource(String src) {
+		String[] args = src.split("" + split);
+		return new User(Integer.valueOf(args[0]), args[1].replaceAll(";", ""));
+	}
+
+	public void setName(String nick) {
+		this.nick = nick;
+	}
+
+	public void setId(int id) {
 		this.id = id;
-		this.input = new DataInputStream(socket.getInputStream());
-		this.output = new DataOutputStream(socket.getOutputStream());
+	}
+
+	public String getName() {
+		return this.nick;
 	}
 
 	public int getId() {
 		return this.id;
 	}
 
-	public void kill() throws IOException {
-		this.socket.close();
-		alert("Warning: connection lost!");
-	}
-
-	public DataOutputStream getOutputStream() {
-		return this.output;
-	}
-
-	public DataInputStream getInputStream() {
-		return this.input;
-	}
-
-	public boolean hasInput() throws IOException {
-		return getInputStream().available() != 0;
-	}
-
-	public void alert(String message) throws IOException {
-		this.getOutputStream().writeUTF(message);
+	@Override
+	public String toString() {
+		return this.id + split + this.getName();
 	}
 
 }

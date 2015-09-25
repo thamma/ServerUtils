@@ -5,5 +5,5 @@ package me.thamma.connection;
  * 
  */
 public interface UserInputHandler {
-	void handle(String input, User user);
+	void handle(String input, ServerConnection user);
 }

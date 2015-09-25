@@ -8,7 +8,7 @@ import java.util.Scanner;
 
 public class Server {
 	private int port;
-	private List<User> users;
+	private List<ServerConnection> users;
 	private ServerSocket server;
 	private Scanner sc;
 	private boolean waitingForUsers;
@@ -25,10 +25,9 @@ public class Server {
 	public Server(int port, int size) throws IOException {
 		this.port = port;
 		this.server = new ServerSocket(this.port);
-		this.users = new ArrayList<User>();
+		this.users = new ArrayList<ServerConnection>();
 		this.waitingForUsers = true;
 		registerUsers(size);
-
 		handleClientInputs((input, user) -> {
 			System.out.println(user.getId() + ": " + input);
 		});
@@ -46,7 +45,7 @@ public class Server {
 	private void handleClientInputs(UserInputHandler inputHandler) {
 		Thread mainLoop = new Thread(() -> {
 			while (true) {
-				for (User user : users) {
+				for (ServerConnection user : users) {
 					try {
 						if (user.hasInput()) {
 							String msg = user.getInputStream().readUTF();
@@ -111,6 +110,6 @@ public class Server {
 	}
 
 	private void registerUser() throws IOException {
-		users.add(new User(users.size(), server.accept()));
+		users.add(new ServerConnection(users.size(), server.accept()));
 	}
 }
