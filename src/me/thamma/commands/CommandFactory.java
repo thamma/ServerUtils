@@ -2,7 +2,7 @@ package me.thamma.commands;
 
 import java.util.HashMap;
 
-import me.thamma.server.Client;
+import me.thamma.connection.Client;
 
 /**
  * Command Factory
@@ -46,4 +46,5 @@ public class CommandFactory {
 		});
 		return cf;
 	}
+
 }

@@ -1,4 +1,4 @@
-package me.thamma.server;
+package me.thamma.connection;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -13,10 +13,10 @@ import me.thamma.commands.CommandFactory;
 
 public class Client {
 	private Socket socket;
-	private DataOutputStream dOut;
-	private DataInputStream dIn;
+	private DataOutputStream dataOut;
+	private DataInputStream dataIn;
 	private Scanner sc;
-	private CommandFactory cf;
+	private CommandFactory commandFactory;
 
 	/**
 	 * Client constructor to be launched by a terminal
@@ -30,9 +30,9 @@ public class Client {
 	 */
 	public Client(String ip, int port) throws UnknownHostException, IOException {
 		this.socket = new Socket(ip, port);
-		cf = CommandFactory.init();
-		dOut = new DataOutputStream(socket.getOutputStream());
-		dIn = new DataInputStream(socket.getInputStream());
+		commandFactory = CommandFactory.init(DingCommand.class);
+		dataOut = new DataOutputStream(socket.getOutputStream());
+		dataIn = new DataInputStream(socket.getInputStream());
 		sc = new Scanner(System.in);
 		handleLocalInput((input) -> {
 			if (input.matches("[{](.*)[}]")) {
@@ -65,7 +65,7 @@ public class Client {
 			}
 			for (String s : args)
 				System.out.println(s);
-			cf.executeCommand(split[0], this, args);
+			commandFactory.executeCommand(split[0], this, args);
 		}
 	}
 
@@ -79,8 +79,8 @@ public class Client {
 		Thread remoteInput = new Thread(() -> {
 			while (true) {
 				try {
-					if (dIn.available() != 0) {
-						String message = dIn.readUTF();
+					if (dataIn.available() != 0) {
+						String message = dataIn.readUTF();
 						if (message.equals(""))
 							inputHandler.handle(message);
 					}
@@ -120,8 +120,8 @@ public class Client {
 	 */
 	public void pushMessage(String message) {
 		try {
-			dOut.writeUTF(message);
-			dOut.flush();
+			dataOut.writeUTF(message);
+			dataOut.flush();
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println("Could not send message to remote");

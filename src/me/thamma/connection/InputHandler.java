@@ -1,4 +1,4 @@
-package me.thamma.server;
+package me.thamma.connection;
 
 /**
  * Lets the client handle input received from remote or local

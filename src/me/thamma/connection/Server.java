@@ -1,4 +1,4 @@
-package me.thamma.server;
+package me.thamma.connection;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -43,7 +43,7 @@ public class Server {
 	 * @param inputHandler
 	 *            The InputHandler interface to handle the String input
 	 */
-	private void handleClientInputs(RemoteInputHandler inputHandler) {
+	private void handleClientInputs(UserInputHandler inputHandler) {
 		Thread mainLoop = new Thread(() -> {
 			while (true) {
 				for (User user : users) {

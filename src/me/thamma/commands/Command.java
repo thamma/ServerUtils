@@ -1,6 +1,6 @@
 package me.thamma.commands;
 
-import me.thamma.server.Client;
+import me.thamma.connection.Client;
 
 @FunctionalInterface
 public interface Command {

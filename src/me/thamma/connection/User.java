@@ -1,11 +1,11 @@
-package me.thamma.server;
+package me.thamma.connection;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-class User {
+public class User {
 	private Socket socket;
 	private DataInputStream input;
 	private DataOutputStream output;
@@ -33,10 +33,6 @@ class User {
 
 	public DataInputStream getInputStream() {
 		return this.input;
-	}
-
-	public void sendEvent() {
-
 	}
 
 	public boolean hasInput() throws IOException {

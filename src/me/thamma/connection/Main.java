@@ -1,4 +1,4 @@
-package me.thamma.server;
+package me.thamma.connection;
 
 public class Main {
 	/**
