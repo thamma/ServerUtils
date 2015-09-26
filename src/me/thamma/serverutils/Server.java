@@ -21,6 +21,8 @@ public class Server {
 	 * @param size
 	 *            The maximum amount of users to connect
 	 * @throws IOException
+	 *             If the connection could not be established or clients failed
+	 *             to connect
 	 */
 	public Server(int port, int size, InputHandler localInput, ClientInputHandler remoteInput) throws IOException {
 		this.port = port;
@@ -59,10 +61,12 @@ public class Server {
 		});
 		mainLoop.start();
 	}
-	
+
 	/**
 	 * Sets whether or not so wait for further clients to connect
-	 * @param wait whether to wait
+	 * 
+	 * @param wait
+	 *            whether to wait
 	 */
 	public void setWaitingForClients(boolean wait) {
 		this.waitingForClients = wait;
@@ -89,15 +93,16 @@ public class Server {
 
 	/**
 	 * Creates a thread that lets the main thread sleep until users.size()
-	 * matches maxCount
+	 * matches cap
 	 * 
-	 * @param maxCount
+	 * @param cap
+	 *            How many users to wait for
 	 */
-	public void registerUsers(int maxCount) {
+	public void registerUsers(int cap) {
 		Thread pollingNewPlayers = new Thread(() -> {
-			System.out.println("Waiting for " + maxCount + " users to connect...");
-			while (users.size() != maxCount && waitingForClients) {
-				System.out.println("Waiting for clients! " + users.size() + "/" + maxCount);
+			System.out.println("Waiting for " + cap + " users to connect...");
+			while (users.size() != cap && waitingForClients) {
+				System.out.println("Waiting for clients! " + users.size() + "/" + cap);
 				try {
 					registerUser();
 				} catch (Exception e) {
@@ -108,7 +113,7 @@ public class Server {
 			System.out.println("[ServerUtils] User limit exceeded");
 		});
 		pollingNewPlayers.start();
-		while (users.size() != maxCount) {
+		while (users.size() != cap) {
 
 		}
 	}

@@ -20,8 +20,8 @@ public class Client {
 	 *            The remote IP to connect to
 	 * @param port
 	 *            The remote port to connect to
-	 * @throws UnknownHostException,
-	 *             IOException If Socket connection cannot be established
+	 * @throws UnknownHostException If Socket connection cannot be established
+	 * @throws IOException If Socket connection cannot be established 
 	 */
 	public Client(String ip, int port) throws UnknownHostException, IOException {
 		this.socket = new Socket(ip, port);
