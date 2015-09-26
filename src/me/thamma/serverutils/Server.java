@@ -20,6 +20,10 @@ public class Server {
 	 *            The port to host the Server on
 	 * @param size
 	 *            The maximum amount of users to connect
+	 * @param localInput
+	 *            The InputHandler to handle the local input
+	 * @param remoteInput
+	 *            The ClientInputHandler to handle the remote output
 	 * @throws IOException
 	 *             If the connection could not be established or clients failed
 	 *             to connect
