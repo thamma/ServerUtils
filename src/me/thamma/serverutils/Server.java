@@ -28,11 +28,12 @@ public class Server {
 	 *             If the connection could not be established or clients failed
 	 *             to connect
 	 */
-	public Server(int port, int size, InputHandler localInput, ClientInputHandler remoteInput) throws IOException {
+	public Server(int port, int size, InputHandler localInput, ServerInputHandler remoteInput) throws IOException {
 		this.port = port;
 		this.server = new ServerSocket(this.port);
 		this.users = new ArrayList<ServerConnection>();
 		this.waitingForClients = true;
+		this.sc = new Scanner(System.in);
 		registerUsers(size);
 		handleClientInputs(remoteInput);
 		handleLocalInput(localInput);
@@ -44,7 +45,7 @@ public class Server {
 	 * @param inputHandler
 	 *            The InputHandler interface to handle the String input
 	 */
-	private void handleClientInputs(ClientInputHandler inputHandler) {
+	private void handleClientInputs(ServerInputHandler inputHandler) {
 		Thread mainLoop = new Thread(() -> {
 			while (true) {
 				for (ServerConnection user : users) {
@@ -53,7 +54,7 @@ public class Server {
 							String msg = user.getInputStream().readUTF();
 							System.out.println(user.getId() + ": " + msg);
 							if (!msg.equalsIgnoreCase("")) {
-								inputHandler.handle(msg, user);
+								inputHandler.handle(this, msg, user);
 							}
 						}
 					} catch (Exception e) {
@@ -88,7 +89,7 @@ public class Server {
 				if (sc.hasNextLine()) {
 					String line = sc.nextLine();
 					if (!line.equals(""))
-						inputHandler.handle(line);
+						inputHandler.handle(this, line);
 				}
 			}
 		});
@@ -104,13 +105,13 @@ public class Server {
 	 */
 	public void registerUsers(int cap) {
 		Thread pollingNewPlayers = new Thread(() -> {
-			System.out.println("Waiting for " + cap + " users to connect...");
+			System.out.println("[ServerUtils] Waiting for " + cap + " users to connect...");
 			while (users.size() != cap && waitingForClients) {
-				System.out.println("Waiting for clients! " + users.size() + "/" + cap);
+				System.out.println("[ServerUtils] Waiting for clients! " + users.size() + "/" + cap);
 				try {
 					registerUser();
 				} catch (Exception e) {
-					System.out.println("Could not register user!");
+					System.out.println("[ServerUtils] Could not register user!");
 					e.printStackTrace();
 				}
 			}

@@ -24,14 +24,17 @@ public class Client {
 	 *            The InputHandler to handle the local input
 	 * @param remoteInput
 	 *            The InputHandler to handle the remote output
-	 * @throws UnknownHostException If Socket connection cannot be established
-	 * @throws IOException If Socket connection cannot be established 
+	 * @throws UnknownHostException
+	 *             If Socket connection cannot be established
+	 * @throws IOException
+	 *             If Socket connection cannot be established
 	 */
-	public Client(String ip, int port, InputHandler localInput, InputHandler remoteInput) throws UnknownHostException, IOException {
+	public Client(String ip, int port, ClientInputHandler localInput, ClientInputHandler remoteInput)
+			throws UnknownHostException, IOException {
 		this.socket = new Socket(ip, port);
-		dataOut = new DataOutputStream(socket.getOutputStream());
-		dataIn = new DataInputStream(socket.getInputStream());
-		sc = new Scanner(System.in);
+		this.dataOut = new DataOutputStream(socket.getOutputStream());
+		this.dataIn = new DataInputStream(socket.getInputStream());
+		this.sc = new Scanner(System.in);
 		handleLocalInput(localInput);
 		handleRemoteInput(remoteInput);
 	}
@@ -42,14 +45,15 @@ public class Client {
 	 * @param inputHandler
 	 *            The InputHandler interface to handle the String input
 	 */
-	private void handleRemoteInput(InputHandler inputHandler) {
+	private void handleRemoteInput(ClientInputHandler inputHandler) {
 		Thread remoteInput = new Thread(() -> {
 			while (true) {
+
 				try {
 					if (dataIn.available() != 0) {
 						String message = dataIn.readUTF();
 						if (!message.equals(""))
-							inputHandler.handle(message);
+							inputHandler.handle(this, message);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -66,13 +70,13 @@ public class Client {
 	 * @param inputHandler
 	 *            The InputHandler interface to handle the String input
 	 */
-	private void handleLocalInput(InputHandler inputHandler) {
+	private void handleLocalInput(ClientInputHandler inputHandler) {
 		Thread localInput = new Thread(() -> {
 			while (true) {
 				if (sc.hasNextLine()) {
 					String line = sc.nextLine();
 					if (!line.equals(""))
-						inputHandler.handle(line);
+						inputHandler.handle(this, line);
 				}
 			}
 		});
