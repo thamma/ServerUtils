@@ -24,7 +24,7 @@ public class ServerConnection {
 
 	public void kill() throws IOException {
 		this.socket.close();
-		notify("Warning: connection lost!");
+		message("Warning: connection lost!");
 	}
 
 	public DataOutputStream getOutputStream() {
@@ -39,7 +39,7 @@ public class ServerConnection {
 		return getInputStream().available() != 0;
 	}
 
-	public void notify(String message) throws IOException {
+	public void message(String message) throws IOException {
 		this.getOutputStream().writeUTF(message);
 	}
 

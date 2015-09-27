@@ -28,7 +28,8 @@ public class Server {
 	 *             If the connection could not be established or clients failed
 	 *             to connect
 	 */
-	public Server(int port, int size, ServerInputHandler localInput, ServerClientInputHandler serverClientInput) throws IOException {
+	public Server(int port, int size, ServerInputHandler localInput, ServerClientInputHandler serverClientInput)
+			throws IOException {
 		this.port = port;
 		this.server = new ServerSocket(this.port);
 		this.users = new ArrayList<ServerConnection>();
@@ -97,6 +98,20 @@ public class Server {
 	}
 
 	/**
+	 * Sends a message to all remote clients
+	 * 
+	 * @param message
+	 *            The message to be sent
+	 * @throws IOException
+	 *             If the message wasn't sent successfully
+	 */
+	public void message(String message) throws IOException {
+		for (ServerConnection client : this.users) {
+			client.message(message);
+		}
+	}
+
+	/**
 	 * Creates a thread that lets the main thread sleep until users.size()
 	 * matches cap
 	 * 
@@ -119,7 +134,6 @@ public class Server {
 		});
 		pollingNewPlayers.start();
 		while (users.size() != cap) {
-
 		}
 	}
 
