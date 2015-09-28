@@ -22,20 +22,20 @@ public class Server {
 	 *            The maximum amount of users to connect
 	 * @param localInput
 	 *            The InputHandler to handle the local input
-	 * @param remoteInput
+	 * @param serverClientInput
 	 *            The ClientInputHandler to handle the remote output
 	 * @throws IOException
 	 *             If the connection could not be established or clients failed
 	 *             to connect
 	 */
-	public Server(int port, int size, InputHandler localInput, ServerInputHandler remoteInput) throws IOException {
+	public Server(int port, int size, ServerInputHandler localInput, ServerClientInputHandler serverClientInput) throws IOException {
 		this.port = port;
 		this.server = new ServerSocket(this.port);
 		this.users = new ArrayList<ServerConnection>();
 		this.waitingForClients = true;
 		this.sc = new Scanner(System.in);
 		registerUsers(size);
-		handleClientInputs(remoteInput);
+		handleClientInputs(serverClientInput);
 		handleLocalInput(localInput);
 	}
 
@@ -45,7 +45,7 @@ public class Server {
 	 * @param inputHandler
 	 *            The InputHandler interface to handle the String input
 	 */
-	private void handleClientInputs(ServerInputHandler inputHandler) {
+	private void handleClientInputs(ServerClientInputHandler inputHandler) {
 		Thread mainLoop = new Thread(() -> {
 			while (true) {
 				for (ServerConnection user : users) {
@@ -83,7 +83,7 @@ public class Server {
 	 * @param inputHandler
 	 *            The InputHandler interface to handle the String input
 	 */
-	private void handleLocalInput(InputHandler inputHandler) {
+	private void handleLocalInput(ServerInputHandler inputHandler) {
 		Thread localInput = new Thread(() -> {
 			while (true) {
 				if (sc.hasNextLine()) {

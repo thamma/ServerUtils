@@ -2,5 +2,5 @@ package me.thamma.serverutils;
 
 @FunctionalInterface
 public interface ClientInputHandler {
-	void handle(Client server, String input);
+	void handle(Client client, String input);
 }

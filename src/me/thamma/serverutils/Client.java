@@ -29,7 +29,7 @@ public class Client {
 	 * @throws IOException
 	 *             If Socket connection cannot be established
 	 */
-	public Client(String ip, int port, ClientInputHandler localInput, ClientInputHandler remoteInput)
+	public Client(String ip, int port, ClientInputHandler localInput, ClientServerInputHandler remoteInput)
 			throws UnknownHostException, IOException {
 		this.socket = new Socket(ip, port);
 		this.dataOut = new DataOutputStream(socket.getOutputStream());
@@ -45,10 +45,9 @@ public class Client {
 	 * @param inputHandler
 	 *            The InputHandler interface to handle the String input
 	 */
-	private void handleRemoteInput(ClientInputHandler inputHandler) {
+	private void handleRemoteInput(ClientServerInputHandler inputHandler) {
 		Thread remoteInput = new Thread(() -> {
 			while (true) {
-
 				try {
 					if (dataIn.available() != 0) {
 						String message = dataIn.readUTF();
