@@ -6,11 +6,21 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class ServerConnection {
-	private Socket socket;
+	public Socket socket;
 	private DataInputStream input;
 	private DataOutputStream output;
 	private int id;
 
+	/**
+	 * ServerConnection constructor
+	 * 
+	 * @param id
+	 *            The (invariant unique) id of the Connection
+	 * @param socket
+	 *            The Socket this client is connected to
+	 * @throws IOException
+	 *             If either the Input- or OutputStream is not available
+	 */
 	public ServerConnection(int id, Socket socket) throws IOException {
 		this.socket = socket;
 		this.id = id;
@@ -20,11 +30,6 @@ public class ServerConnection {
 
 	public int getId() {
 		return this.id;
-	}	
-
-	public void kill() throws IOException {
-		this.socket.close();
-		message("Warning: connection lost!");
 	}
 
 	public DataOutputStream getOutputStream() {
@@ -35,8 +40,13 @@ public class ServerConnection {
 		return this.input;
 	}
 
-	public boolean hasInput() throws IOException {
-		return getInputStream().available() != 0;
+	public boolean hasInput() {
+		try {
+			return getInputStream().available() != 0;
+		} catch (IOException e) {
+			System.out.println("Could not fetch getInputStream().available()");
+			return false;
+		}
 	}
 
 	public void message(String message) throws IOException {

@@ -3,15 +3,15 @@ package me.thamma.serverutils;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
-public class Server {
+public class Server implements Iterable<ServerConnection> {
 	private int port;
-	private List<ServerConnection> users;
+	private List<ServerConnection> clients;
 	private ServerSocket server;
 	private Scanner sc;
-	private boolean waitingForClients;
 
 	/**
 	 * Server constructor to be launched by a terminal
@@ -32,12 +32,11 @@ public class Server {
 			throws IOException {
 		this.port = port;
 		this.server = new ServerSocket(this.port);
-		this.users = new ArrayList<ServerConnection>();
-		this.waitingForClients = true;
+		this.clients = new ArrayList<ServerConnection>();
 		this.sc = new Scanner(System.in);
 		registerUsers(size);
-		handleClientInputs(serverClientInput);
 		handleLocalInput(localInput);
+		handleClientInputs(serverClientInput);
 	}
 
 	/**
@@ -49,7 +48,7 @@ public class Server {
 	private void handleClientInputs(ServerClientInputHandler inputHandler) {
 		Thread mainLoop = new Thread(() -> {
 			while (true) {
-				for (ServerConnection user : users) {
+				for (ServerConnection user : clients) {
 					try {
 						if (user.hasInput()) {
 							String msg = user.getInputStream().readUTF();
@@ -66,16 +65,6 @@ public class Server {
 			}
 		});
 		mainLoop.start();
-	}
-
-	/**
-	 * Sets whether or not so wait for further clients to connect
-	 * 
-	 * @param wait
-	 *            whether to wait
-	 */
-	public void setWaitingForClients(boolean wait) {
-		this.waitingForClients = wait;
 	}
 
 	/**
@@ -105,14 +94,22 @@ public class Server {
 	 * @throws IOException
 	 *             If the message wasn't sent successfully
 	 */
-	public void message(String message) throws IOException {
+	public void message(String message) {
 		try {
-			for (ServerConnection client : this.users) {
+			for (ServerConnection client : this.clients) {
 				client.message(message);
 			}
 		} catch (Exception e) {
 			System.out.println("Could not send message to client");
 		}
+	}
+
+	/**
+	 * 
+	 * @return The List<ServerConnection> containing all clients
+	 */
+	public List<ServerConnection> getClients() {
+		return this.clients;
 	}
 
 	/**
@@ -125,8 +122,8 @@ public class Server {
 	public void registerUsers(int cap) {
 		Thread pollingNewPlayers = new Thread(() -> {
 			System.out.println("[ServerUtils] Waiting for " + cap + " users to connect...");
-			while (users.size() != cap && waitingForClients) {
-				System.out.println("[ServerUtils] Waiting for clients! " + users.size() + "/" + cap);
+			while (clients.size() != cap) {
+				System.out.println("[ServerUtils] Waiting for clients! " + clients.size() + "/" + cap);
 				try {
 					registerUser();
 				} catch (Exception e) {
@@ -137,11 +134,26 @@ public class Server {
 			System.out.println("[ServerUtils] User limit exceeded");
 		});
 		pollingNewPlayers.start();
-		while (users.size() != cap) {
+		while (clients.size() != cap) {
 		}
 	}
 
+	/**
+	 * Pauses the thread waiting for the next client to connect
+	 * 
+	 * @throws IOException
+	 */
 	private void registerUser() throws IOException {
-		users.add(new ServerConnection(users.size(), server.accept()));
+		clients.add(new ServerConnection(clients.size(), server.accept()));
+	}
+
+	/**
+	 * The Iterator implemented by Iterable<ServerConnection>
+	 * 
+	 * @return Iterator<ServerConnection>
+	 */
+	@Override
+	public Iterator<ServerConnection> iterator() {
+		return this.clients.iterator();
 	}
 }
