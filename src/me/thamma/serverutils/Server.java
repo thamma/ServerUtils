@@ -67,6 +67,17 @@ public class Server implements Iterable<ServerConnection> {
 		mainLoop.start();
 	}
 
+	public void message(String message, int id) {
+		try {
+			for (ServerConnection client : this) {
+				if (client.getId() == id) {
+					client.message(message);
+				}
+			}
+		} catch (Exception e) {
+		}
+	}
+
 	/**
 	 * Starts a thread which fetches the local input
 	 * 
@@ -96,7 +107,7 @@ public class Server implements Iterable<ServerConnection> {
 	 */
 	public void message(String message) {
 		try {
-			for (ServerConnection client : this.clients) {
+			for (ServerConnection client : this) {
 				client.message(message);
 			}
 		} catch (Exception e) {
