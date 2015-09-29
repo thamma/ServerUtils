@@ -106,8 +106,12 @@ public class Server {
 	 *             If the message wasn't sent successfully
 	 */
 	public void message(String message) throws IOException {
-		for (ServerConnection client : this.users) {
-			client.message(message);
+		try {
+			for (ServerConnection client : this.users) {
+				client.message(message);
+			}
+		} catch (Exception e) {
+			System.out.println("Could not send message to client");
 		}
 	}
 

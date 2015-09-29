@@ -3,12 +3,12 @@ package me.thamma.serverutils;
 @FunctionalInterface
 public interface ServerClientInputHandler {
 	/**
-	 * Handles the clients Input
+	 * Handles the input the server received from the client
 	 * 
 	 * @param server
-	 *            The client to manage the input in
+	 *            The server receiving the input
 	 * @param input
-	 *            The input string
+	 *            The input String
 	 * @param user
 	 *            The ServerConnection that sent the input
 	 */
