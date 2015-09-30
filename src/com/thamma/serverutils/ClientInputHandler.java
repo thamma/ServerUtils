@@ -1,4 +1,4 @@
-package me.thamma.serverutils;
+package com.thamma.serverutils;
 
 @FunctionalInterface
 public interface ClientInputHandler {

@@ -1,4 +1,4 @@
-package me.thamma.serverutils;
+package com.thamma.serverutils;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
