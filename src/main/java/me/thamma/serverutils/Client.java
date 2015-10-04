@@ -30,8 +30,7 @@ public abstract class Client {
 	 * @throws IOException
 	 *             If Socket connection cannot be established
 	 */
-	public Client(String ip, int port)
-			throws UnknownHostException, IOException {
+	public Client(String ip, int port) throws UnknownHostException, IOException {
 		this.id = -1;
 		this.socket = new Socket(ip, port);
 		this.dataOut = new DataOutputStream(socket.getOutputStream());
@@ -41,7 +40,7 @@ public abstract class Client {
 		handleRemoteInput(getClientServerInputHandler());
 	}
 
-	//TODO update documentation
+	// TODO update documentation
 	public abstract ClientInputHandler getClientInputHandler();
 
 	public abstract ClientServerInputHandler getClientServerInputHandler();
@@ -85,8 +84,8 @@ public abstract class Client {
 									System.out.println(
 											"Shutting client down. No id was received. Please talk to your network administrator!");
 								}
-							}
-							inputHandler.handle(this, message);
+							} else
+								inputHandler.handle(this, message);
 						}
 					}
 				} catch (Exception e) {
