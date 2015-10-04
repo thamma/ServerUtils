@@ -47,7 +47,6 @@ public abstract class Server implements Iterable<ServerConnection> {
 
 	public abstract ServerClientInputHandler getServerClientInputHandler();
 
-
 	/**
 	 * Starts a thread which fetches the clients' input (in order)
 	 * 
@@ -166,8 +165,8 @@ public abstract class Server implements Iterable<ServerConnection> {
 	private void registerUser(ServerNewConnectionHandler handler) throws IOException {
 		ServerConnection connection = new ServerConnection(clients.size(), server.accept());
 		connection.message("" + connection.getId());
-		handler.handle(this, connection);
 		clients.add(connection);
+		handler.handle(this, connection);
 	}
 
 	/**
