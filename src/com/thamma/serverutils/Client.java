@@ -7,11 +7,12 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Scanner;
 
-public class Client {
+public abstract class Client {
 	private Socket socket;
 	private DataOutputStream dataOut;
 	private DataInputStream dataIn;
 	private Scanner sc;
+	private int id;
 
 	/**
 	 * Client constructor to be launched by a terminal
@@ -29,14 +30,38 @@ public class Client {
 	 * @throws IOException
 	 *             If Socket connection cannot be established
 	 */
-	public Client(String ip, int port, ClientInputHandler localInput, ClientServerInputHandler remoteInput)
+	public Client(String ip, int port)
 			throws UnknownHostException, IOException {
+		this.id = -1;
 		this.socket = new Socket(ip, port);
 		this.dataOut = new DataOutputStream(socket.getOutputStream());
 		this.dataIn = new DataInputStream(socket.getInputStream());
 		this.sc = new Scanner(System.in);
-		handleLocalInput(localInput);
-		handleRemoteInput(remoteInput);
+		handleLocalInput(getClientInputHandler());
+		handleRemoteInput(getClientServerInputHandler());
+	}
+
+	public abstract ClientInputHandler getClientInputHandler();
+
+	public abstract ClientServerInputHandler getClientServerInputHandler();
+
+	/**
+	 * The unique Client id assigned by the ServerSocket upon initial connect
+	 * 
+	 * @return The client's id
+	 */
+	public int getId() {
+		return this.id;
+	}
+
+	/**
+	 * Closes the Socket
+	 * 
+	 * @throws IOException
+	 *             If the Socket connection could not be closed
+	 */
+	public void kill() throws IOException {
+		socket.close();
 	}
 
 	/**
@@ -51,8 +76,17 @@ public class Client {
 				try {
 					if (dataIn.available() != 0) {
 						String message = dataIn.readUTF();
-						if (!message.equals(""))
+						if (!message.equals("")) {
+							if (id == -1) {
+								try {
+									id = Integer.parseInt(message);
+								} catch (Exception e) {
+									System.out.println(
+											"Shutting client down. No id was received. Please talk to your network administrator!");
+								}
+							}
 							inputHandler.handle(this, message);
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();

@@ -7,7 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
-public class Server implements Iterable<ServerConnection> {
+public abstract class Server implements Iterable<ServerConnection> {
 	private int port;
 	private List<ServerConnection> clients;
 	private ServerSocket server;
@@ -20,24 +20,33 @@ public class Server implements Iterable<ServerConnection> {
 	 *            The port to host the Server on
 	 * @param size
 	 *            The maximum amount of users to connect
-	 * @param localInput
-	 *            The InputHandler to handle the local input
-	 * @param serverClientInput
-	 *            The ClientInputHandler to handle the remote output
 	 * @throws IOException
 	 *             If the connection could not be established or clients failed
 	 *             to connect
 	 */
-	public Server(int port, int size, ServerInputHandler localInput, ServerClientInputHandler serverClientInput)
-			throws IOException {
+	public Server(int port, int size) throws IOException {
 		this.port = port;
 		this.server = new ServerSocket(this.port);
 		this.clients = new ArrayList<ServerConnection>();
 		this.sc = new Scanner(System.in);
-		registerUsers(size);
-		handleLocalInput(localInput);
-		handleClientInputs(serverClientInput);
+		registerUsers(size, getServerNewConnectionHandler());
+		handleLocalInput(getServerInputHandler());
+		handleClientInputs(getServerClientInputHandler());
 	}
+
+	public ServerNewConnectionHandler getServerNewConnectionHandler() {
+		return new ServerNewConnectionHandler() {
+			@Override
+			public void handle(Server server, ServerConnection connection) {
+				// TODO Auto-generated method stub
+			}
+		};
+	}
+
+	public abstract ServerInputHandler getServerInputHandler();
+
+	public abstract ServerClientInputHandler getServerClientInputHandler();
+
 
 	/**
 	 * Starts a thread which fetches the clients' input (in order)
@@ -130,13 +139,13 @@ public class Server implements Iterable<ServerConnection> {
 	 * @param cap
 	 *            How many users to wait for
 	 */
-	public void registerUsers(int cap) {
+	public void registerUsers(int cap, ServerNewConnectionHandler handler) {
 		Thread pollingNewPlayers = new Thread(() -> {
 			System.out.println("[ServerUtils] Waiting for " + cap + " users to connect...");
 			while (clients.size() != cap) {
 				System.out.println("[ServerUtils] Waiting for clients! " + clients.size() + "/" + cap);
 				try {
-					registerUser();
+					registerUser(handler);
 				} catch (Exception e) {
 					System.out.println("[ServerUtils] Could not register user!");
 					e.printStackTrace();
@@ -154,8 +163,11 @@ public class Server implements Iterable<ServerConnection> {
 	 * 
 	 * @throws IOException
 	 */
-	private void registerUser() throws IOException {
-		clients.add(new ServerConnection(clients.size(), server.accept()));
+	private void registerUser(ServerNewConnectionHandler handler) throws IOException {
+		ServerConnection connection = new ServerConnection(clients.size(), server.accept());
+		connection.message("" + connection.getId());
+		handler.handle(this, connection);
+		clients.add(connection);
 	}
 
 	/**
