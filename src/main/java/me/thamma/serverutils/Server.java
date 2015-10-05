@@ -34,6 +34,16 @@ public abstract class Server implements Iterable<ServerConnection> {
 		handleClientInputs(getServerClientInputHandler());
 	}
 
+	/**
+	 * Closes the ServerSocket connection
+	 * 
+	 * @throws IOException
+	 *             If the connection could not be closed
+	 */
+	public void kill() throws IOException {
+		server.close();
+	}
+
 	public ServerNewConnectionHandler getServerNewConnectionHandler() {
 		return new ServerNewConnectionHandler() {
 			@Override
