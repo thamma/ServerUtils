@@ -34,6 +34,10 @@ public abstract class Server implements Iterable<ServerConnection> {
 		handleClientInputs(getServerClientInputHandler());
 	}
 
+	public Server(int port) throws IOException {
+		this(port, 0);
+	}
+
 	/**
 	 * Closes the ServerSocket connection
 	 * 
@@ -151,7 +155,7 @@ public abstract class Server implements Iterable<ServerConnection> {
 	public void registerUsers(int cap, ServerNewConnectionHandler handler) {
 		Thread pollingNewPlayers = new Thread(() -> {
 			System.out.println("[ServerUtils] Waiting for " + cap + " users to connect...");
-			while (clients.size() != cap) {
+			while (cap == 0 || clients.size() != cap) {
 				System.out.println("[ServerUtils] Waiting for clients! " + clients.size() + "/" + cap);
 				try {
 					registerUser(handler);
@@ -163,7 +167,7 @@ public abstract class Server implements Iterable<ServerConnection> {
 			System.out.println("[ServerUtils] User limit exceeded");
 		});
 		pollingNewPlayers.start();
-		while (clients.size() != cap) {
+		while (cap != 0 && clients.size() != cap) {
 		}
 	}
 
