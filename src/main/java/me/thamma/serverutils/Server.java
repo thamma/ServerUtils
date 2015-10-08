@@ -2,10 +2,10 @@ package me.thamma.serverutils;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public abstract class Server implements Iterable<ServerConnection> {
 	private int port;
@@ -27,7 +27,7 @@ public abstract class Server implements Iterable<ServerConnection> {
 	public Server(int port, int size) throws IOException {
 		this.port = port;
 		this.server = new ServerSocket(this.port);
-		this.clients = new ArrayList<ServerConnection>();
+		this.clients = new CopyOnWriteArrayList<ServerConnection>();
 		this.sc = new Scanner(System.in);
 		registerUsers(size, getServerNewConnectionHandler());
 		handleLocalInput(getServerInputHandler());
