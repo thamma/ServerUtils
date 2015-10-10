@@ -1,31 +1,78 @@
 package me.thamma.serverutils;
 
+import static me.thamma.serverutils.Utils.*;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
 public class ServerConnection {
-	public Socket socket;
-	private DataInputStream input;
-	private DataOutputStream output;
+
+	private Socket socket;
+	private DataInputStream inputStream;
+	private DataOutputStream outputStream;
 	private int id;
 
-	/**
-	 * ServerConnection constructor
-	 * 
-	 * @param id
-	 *            The (invariant unique) id of the Connection
-	 * @param socket
-	 *            The Socket this client is connected to
-	 * @throws IOException
-	 *             If either the Input- or OutputStream is not available
-	 */
-	public ServerConnection(int id, Socket socket) throws IOException {
+	//////////////////
+	// constructors //
+	//////////////////
+
+	public ServerConnection(int id, Socket socket) {
 		this.socket = socket;
 		this.id = id;
-		this.input = new DataInputStream(socket.getInputStream());
-		this.output = new DataOutputStream(socket.getOutputStream());
+		try {
+			this.inputStream = new DataInputStream(socket.getInputStream());
+			this.outputStream = new DataOutputStream(socket.getOutputStream());
+		} catch (IOException e) {
+			warning("Could not fetch ServerConnection's input or output stream");
+		}
+	}
+
+	/////////////
+	// methods //
+	/////////////
+
+	public boolean inputAvailable() {
+		try {
+			return getInputStream().available() != 0;
+		} catch (IOException e) {
+			warning("Could not read input.available()!");
+			return false;
+		}
+	}
+
+	public String getInput() {
+		try {
+			return this.getInputStream().readUTF();
+		} catch (IOException e) {
+			warning("Could not read input.readUTF()!");
+			return "";
+		}
+	}
+
+	public void sendMessage(String message) {
+		try {
+			this.getOutputStream().writeUTF(message);
+		} catch (IOException e) {
+			warning("Could not send message to remote!");
+		}
+	}
+
+	/////////////////////////
+	// getters and setters //
+	/////////////////////////
+
+	public Socket getSocket() {
+		return this.socket;
+	}
+
+	public void setId(int id) {
+		if (this.id == -1) {
+			this.id = id;
+		} else {
+			warning("The ServerConnections id cannot be changed after it has been set.");
+		}
 	}
 
 	public int getId() {
@@ -33,24 +80,21 @@ public class ServerConnection {
 	}
 
 	public DataOutputStream getOutputStream() {
-		return this.output;
+		return this.outputStream;
 	}
 
 	public DataInputStream getInputStream() {
-		return this.input;
+		return this.inputStream;
 	}
 
-	public boolean hasInput() {
+	public void kill() {
 		try {
-			return getInputStream().available() != 0;
+			this.inputStream.close();
+			this.outputStream.close();
+			this.socket.close();
 		} catch (IOException e) {
-			System.out.println("Could not fetch getInputStream().available()");
-			return false;
+			warning("Could not properly close Socket!");
 		}
-	}
-
-	public void message(String message) throws IOException {
-		this.getOutputStream().writeUTF(message);
 	}
 
 }
