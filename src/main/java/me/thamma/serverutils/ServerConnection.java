@@ -37,7 +37,8 @@ public class ServerConnection {
 		try {
 			return getInputStream().available() != 0;
 		} catch (IOException e) {
-			warning("Could not read input.available()!");
+			warning("Could not read input.available()! Killing client!");
+			this.kill();
 			return false;
 		}
 	}
@@ -46,7 +47,8 @@ public class ServerConnection {
 		try {
 			return this.getInputStream().readUTF();
 		} catch (IOException e) {
-			warning("Could not read input.readUTF()!");
+			warning("Could not read input.readUTF()! Killing client!");
+			this.kill();
 			return "";
 		}
 	}
@@ -55,7 +57,8 @@ public class ServerConnection {
 		try {
 			this.getOutputStream().writeUTF(message);
 		} catch (IOException e) {
-			warning("Could not send message to remote!");
+			warning("Could not send message to remote! Killing client!");
+			this.kill();
 		}
 	}
 
