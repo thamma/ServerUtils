@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import me.thamma.serverutils.handleres.ServerClientDisconnectHandler;
 import me.thamma.serverutils.handleres.ServerClientInputHandler;
 import me.thamma.serverutils.handleres.ServerInputHandler;
 import me.thamma.serverutils.handleres.ServerNewConnectionHandler;
@@ -18,6 +19,7 @@ public abstract class Server implements Iterable<ServerConnection> {
 	private List<ServerConnection> connections;
 	private ServerSocket server;
 	private Scanner sc;
+	private int nextId;
 
 	//////////////////
 	// Constructors //
@@ -28,6 +30,7 @@ public abstract class Server implements Iterable<ServerConnection> {
 		this.server = new ServerSocket(this.port);
 		this.connections = new CopyOnWriteArrayList<ServerConnection>();
 		this.sc = new Scanner(System.in);
+		this.nextId = -1;
 		registerUsers(getServerNewConnectionHandler());
 		registerServerListener();
 	}
@@ -58,7 +61,7 @@ public abstract class Server implements Iterable<ServerConnection> {
 				client.sendMessage(message);
 			}
 		} catch (Exception e) {
-			System.out.println("Could not send message to client");
+			// System.out.println("Could not send message to client");
 		}
 	}
 
@@ -77,6 +80,8 @@ public abstract class Server implements Iterable<ServerConnection> {
 
 	public abstract ServerClientInputHandler getServerClientInputHandler();
 
+	public abstract ServerClientDisconnectHandler getServerClientDisconnectInputHandler();
+
 	///////////////////////
 	// register handlers //
 	///////////////////////
@@ -90,27 +95,38 @@ public abstract class Server implements Iterable<ServerConnection> {
 	}
 
 	private void registerUser(ServerNewConnectionHandler handler) {
-		ServerConnection connection = null;
 		try {
-			connection = new ServerConnection(connections.size(), server.accept());
+			ServerConnection connection = new ServerConnection(nextId(), server.accept());
+			connection.sendMessage("" + connection.getId());
+			this.connections.add(connection);
+			getServerNewConnectionHandler().handle(this, connection);
+			registerClientListener(connection);
 		} catch (IOException e) {
 			warning("Could not accept new ServerConnection!");
 			return;
 		}
-		connection.sendMessage("" + connections.size());
-		this.connections.add(connection);
-		getServerNewConnectionHandler().handle(this, connection);
-		registerClientListener(connection);
+
 	}
 
 	private void registerClientListener(ServerConnection connection) {
 		new Thread(() -> {
-			while (true)
+			while (connection.alive())
 				if (connection.inputAvailable()) {
 					String message = connection.getInput();
-					if (!message.equals(""))
+					if (message == null) {
+						this.getServerClientDisconnectInputHandler().handle(this, connection);
+						return;
+					} else if (!message.equals(""))
 						this.getServerClientInputHandler().handle(this, message, connection);
 				}
+			for (ServerConnection kill : this) {
+				if (kill.getId() == connection.getId()) {
+					getServerClientDisconnectInputHandler().handle(this, kill);
+					kill.kill();
+					this.connections.remove(kill);
+				}
+			}
+			return;
 		}).start();
 	}
 
@@ -123,6 +139,11 @@ public abstract class Server implements Iterable<ServerConnection> {
 						this.getServerInputHandler().handle(this, message);
 				}
 		}).start();
+	}
+
+	private int nextId() {
+		nextId++;
+		return this.nextId;
 	}
 
 }
