@@ -12,14 +12,22 @@ import me.thamma.serverutils.handleres.ClientServerInputHandler;
 public abstract class Client extends ServerConnection {
 
 	private Scanner sc;
+	private boolean alive;
 	/////////////////
 	// constructor //
 	/////////////////
 
 	public Client(String ip, int port) throws UnknownHostException, IOException {
+		this(ip, port, true);
+	}
+
+	public Client(String ip, int port, boolean scanner) throws UnknownHostException, IOException {
 		super(-1, new Socket(ip, port));
-		this.sc = new Scanner(System.in);
-		handleLocalInput(getClientInputHandler());
+		this.alive = true;
+		if (scanner) {
+			this.sc = new Scanner(System.in);
+			handleLocalInput(getClientInputHandler());
+		}
 		handleRemoteInput(getClientServerInputHandler());
 	}
 
@@ -31,9 +39,11 @@ public abstract class Client extends ServerConnection {
 
 	private void handleRemoteInput(ClientServerInputHandler inputHandler) {
 		Thread remoteInput = new Thread(() -> {
-			while (true)
+			while (true && alive)
 				if (super.inputAvailable()) {
 					String message = super.getInput();
+					if (message == null)
+						return;
 					if (!message.equals(""))
 						if (super.getId() == -1) {
 							try {
@@ -45,14 +55,18 @@ public abstract class Client extends ServerConnection {
 						} else
 							inputHandler.handle(this, message);
 				}
+			return;
 		});
 		remoteInput.start();
 	}
 
 	@Override
 	public void kill() {
+		alive = false;
+//		if (this.sc != null) {
+//			this.sc.close();
+//		}
 		super.kill();
-		this.sc.close();
 	}
 
 	/**
@@ -62,15 +76,14 @@ public abstract class Client extends ServerConnection {
 	 *            The InputHandler interface to handle the String input
 	 */
 	private void handleLocalInput(ClientInputHandler inputHandler) {
-		Thread localInput = new Thread(() -> {
-			while (true) {
+		new Thread(() -> {
+			while (true && alive) {
 				if (sc.hasNextLine()) {
 					String line = sc.nextLine();
 					if (!line.equals(""))
 						inputHandler.handle(this, line);
 				}
 			}
-		});
-		localInput.start();
+		}).start();
 	}
 }

@@ -13,6 +13,7 @@ public class ServerConnection {
 	private DataInputStream inputStream;
 	private DataOutputStream outputStream;
 	private int id;
+	private boolean alive;
 
 	//////////////////
 	// constructors //
@@ -21,6 +22,7 @@ public class ServerConnection {
 	public ServerConnection(int id, Socket socket) {
 		this.socket = socket;
 		this.id = id;
+		this.alive = true;
 		try {
 			this.inputStream = new DataInputStream(socket.getInputStream());
 			this.outputStream = new DataOutputStream(socket.getOutputStream());
@@ -34,13 +36,16 @@ public class ServerConnection {
 	/////////////
 
 	public boolean alive() {
-		try {
-			getInputStream().available();
-			this.getOutputStream().writeUTF("");
-		} catch (IOException e) {
-			return false;
-		}
-		return true;
+		return this.alive;
+		// if (!this.alive)
+		// return false;
+		// try {
+		// getInputStream().available();
+		// return true;
+		// } catch (IOException e) {
+		// return false;
+		// }
+		// return true;
 	}
 
 	public boolean inputAvailable() {
@@ -55,7 +60,7 @@ public class ServerConnection {
 		try {
 			return this.getInputStream().readUTF();
 		} catch (IOException e) {
-			return null;
+			return "";
 		}
 	}
 
@@ -63,7 +68,8 @@ public class ServerConnection {
 		try {
 			this.getOutputStream().writeUTF(message);
 		} catch (IOException e) {
-			System.out.println("couldnt send message");
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 
@@ -97,6 +103,7 @@ public class ServerConnection {
 
 	public void kill() {
 		try {
+			this.alive = false;
 			this.inputStream.close();
 			this.outputStream.close();
 			this.socket.close();
