@@ -15,6 +15,9 @@ import me.thamma.serverutils.handleres.ServerInputHandler;
 import me.thamma.serverutils.handleres.ServerNewConnectionHandler;
 
 public abstract class Server implements Iterable<ServerConnection> {
+	
+	final int HEARTBEAT = 200;
+	
 	private int port;
 	private List<ServerConnection> connections;
 	private ServerSocket server;
@@ -27,7 +30,7 @@ public abstract class Server implements Iterable<ServerConnection> {
 	//////////////////
 
 	public Server(int port) throws IOException {
-		this(port, true);
+		this(port, false);
 	}
 
 	public Server(int port, boolean scanner) throws IOException {
@@ -69,7 +72,6 @@ public abstract class Server implements Iterable<ServerConnection> {
 				client.sendMessage(message);
 			}
 		} catch (Exception e) {
-			// System.out.println("Could not send message to client");
 		}
 	}
 
@@ -107,7 +109,6 @@ public abstract class Server implements Iterable<ServerConnection> {
 		}).start();
 	}
 
-	final int HEARTBEAT = 200;
 
 	private void registerUser(ServerNewConnectionHandler handler) {
 		try {
@@ -155,13 +156,6 @@ public abstract class Server implements Iterable<ServerConnection> {
 					} else if (!message.equals(""))
 						this.getServerClientInputHandler().handle(this, message, connection);
 				}
-			// for (ServerConnection kill : this) {
-			// if (kill.getId() == connection.getId()) {
-			// getServerClientDisconnectInputHandler().handle(this, kill);
-			// kill.kill();
-			// this.connections.remove(kill);
-			// }
-			// }
 			return;
 		}).start();
 	}

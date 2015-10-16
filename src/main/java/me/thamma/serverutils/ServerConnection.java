@@ -64,13 +64,8 @@ public class ServerConnection {
 		}
 	}
 
-	public void sendMessage(String message) {
-		try {
-			this.getOutputStream().writeUTF(message);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+	public void sendMessage(String message) throws IOException {
+		this.getOutputStream().writeUTF(message);
 	}
 
 	/////////////////////////

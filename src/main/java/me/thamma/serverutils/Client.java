@@ -13,14 +13,41 @@ public abstract class Client extends ServerConnection {
 
 	private Scanner sc;
 	private boolean alive;
-	/////////////////
-	// constructor //
-	/////////////////
 
+	//////////////////
+	// Constructors //
+	//////////////////
+
+	/**
+	 * Client constructor. Upon call, Client will try to connect to the
+	 * according Server.
+	 * 
+	 * @param ip
+	 *            The IP adress to connect to
+	 * @param port
+	 *            The port to connect to
+	 * @throws UnknownHostException
+	 *             If the IP adress turned out to be invalid
+	 * @throws IOException
+	 */
 	public Client(String ip, int port) throws UnknownHostException, IOException {
-		this(ip, port, true);
+		this(ip, port, false);
 	}
 
+	/**
+	 * Client constructor. Upon call, Client will try to connect to the
+	 * according Server.
+	 * 
+	 * @param ip
+	 *            The IP adress to connect to
+	 * @param port
+	 *            The port to connect to
+	 * @param scanner
+	 *            Whether or not to use a new Scanner(System.in)
+	 * @throws UnknownHostException
+	 *             If the IP adress turned out to be invalid
+	 * @throws IOException
+	 */
 	public Client(String ip, int port, boolean scanner) throws UnknownHostException, IOException {
 		super(-1, new Socket(ip, port));
 		this.alive = true;
@@ -31,11 +58,22 @@ public abstract class Client extends ServerConnection {
 		handleRemoteInput(getClientServerInputHandler());
 	}
 
-	// methods
+	////////////////////
+	// Public methods //
+	////////////////////
 
-	public abstract ClientInputHandler getClientInputHandler();
+	/**
+	 * 
+	 */
+	@Override
+	public void kill() {
+		alive = false;
+		super.kill();
+	}
 
-	public abstract ClientServerInputHandler getClientServerInputHandler();
+	///////////////////////
+	// Register handlers //
+	////////////////////////
 
 	private void handleRemoteInput(ClientServerInputHandler inputHandler) {
 		Thread remoteInput = new Thread(() -> {
@@ -60,21 +98,6 @@ public abstract class Client extends ServerConnection {
 		remoteInput.start();
 	}
 
-	@Override
-	public void kill() {
-		alive = false;
-//		if (this.sc != null) {
-//			this.sc.close();
-//		}
-		super.kill();
-	}
-
-	/**
-	 * Starts a thread which fetches the local input
-	 * 
-	 * @param inputHandler
-	 *            The InputHandler interface to handle the String input
-	 */
 	private void handleLocalInput(ClientInputHandler inputHandler) {
 		new Thread(() -> {
 			while (true && alive) {
@@ -86,4 +109,12 @@ public abstract class Client extends ServerConnection {
 			}
 		}).start();
 	}
+
+	//////////////////////
+	// Abstract methods //
+	//////////////////////
+
+	public abstract ClientInputHandler getClientInputHandler();
+
+	public abstract ClientServerInputHandler getClientServerInputHandler();
 }
